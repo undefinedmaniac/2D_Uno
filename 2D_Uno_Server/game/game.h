@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <deque>
+#include <memory>
 
 #include "player.h"
 #include "deck.h"
@@ -13,16 +14,17 @@
 using std::unordered_map;
 using std::pair;
 using std::deque;
+using std::unique_ptr;
 
 namespace game
 {
+
+typedef unordered_map<Player*, PrivatePlayer*> PlayerMap;
 
 class Game
 {
 public:
     Game(IGameObserver* observer = nullptr);
-
-    ~Game();
 
     void setObserver(IGameObserver& observer);
 
@@ -33,21 +35,25 @@ public:
     void removePlayer(Player* player);
 
     const Card* getTopCard() const;
-    bool drawCard(Player* player);
-    bool playCard(Player* player, const Card* card);
-    bool playCard(Player* player, const Card* card, CardColor newColor);
+    bool drawCard();
+    bool playCard(const Card* card);
+    bool playCard(const Card* card, CardColor newColor);
 
     Player* getCurrentPlayer();
+    bool endTurn();
     bool isTurnDirectionReversed();
 
 private:
     void shuffleDeck();
 
-    bool drawCardHelper(Player* player, int nCards);
-    bool giveNextPlayerCards(int nCards);
+    int drawCardHelper(Player* player, int nCards);
+    int giveNextPlayerCards(int nCards);
 
     void advancePlayerTurn();
-    void advancePlayerTurnHelper();
+    void startNextPlayerTurn();
+    void startNextPlayerTurnHelper();
+    void endPlayerTurn();
+    void endPlayerTurnHelper();
     void skipPlayerTurn();
     void changeTurnDirection();
 
@@ -57,11 +63,15 @@ private:
     DiscardPile discardPile_;
     CardColor wildcardColor_;
 
-    unordered_map<Player*, PrivatePlayer*> playerMap_;
+    unordered_set<unique_ptr<Player>> players_;
+    unordered_set<unique_ptr<PrivatePlayer>> privatePlayers_;
+    PlayerMap playerMap_;
+    bool hasPlayerPlayed_;
 
     Player* currentPlayer_ = nullptr;
     deque<Player*> turnList_;
     bool isTurnDirectionReversed_ = false;
+    bool skipNextPlayerTurn_ = false;
 
     bool isGameRunning = false;
 };
