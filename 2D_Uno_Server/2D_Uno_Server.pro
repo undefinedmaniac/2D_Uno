@@ -7,10 +7,11 @@ SOURCES += \
         main.cpp \
     game/card.cpp \
     game/deck.cpp \
-    game/discardpile.cpp \
     game/privateplayer.cpp \
     game/game.cpp \
-    game/player.cpp
+    game/player.cpp \
+    game/game_turn_manager.cpp \
+    game/discard_pile.cpp
 
 HEADERS += \
     game/card.h \
@@ -21,4 +22,5 @@ HEADERS += \
     game/game.h \
     game/interfaces/igameobserver.h \
     game/player.h \
-    game/discard_pile.h
+    game/discard_pile.h \
+    game/game_turn_manager.h

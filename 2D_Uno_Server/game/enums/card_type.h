@@ -6,8 +6,8 @@ namespace game
 
 enum class CardType
 {
-    One, Two, Three, Four, Five, Six, Seven, Eight, Nine,
-    Skip, Reverse, DrawTwo, Wildcard, DrawFourWildcard
+    Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Skip, Reverse,
+    DrawTwo, Wildcard, DrawFourWildcard
 };
 
 }

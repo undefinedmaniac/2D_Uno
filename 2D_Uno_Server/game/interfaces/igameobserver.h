@@ -13,7 +13,9 @@ class IGameObserver
 public:
     virtual ~IGameObserver();
 
-    virtual void gameStarted(const Card* firstCard) = 0;
+    virtual void gameStarted(const Card* firstCard,
+                             CardColor startingColor) = 0;
+    virtual void gameReset() = 0;
     virtual void gameEnded(Player* winner) = 0;
 
     virtual void playerCardCountChanged(Player* player, int newCount) = 0;
@@ -22,7 +24,8 @@ public:
     virtual void deckCountChanged(int newCount) = 0;
     virtual void discardPileCountChanged(int newCount) = 0;
     virtual void cardPlayed(Player* player, const Card* card) = 0;
-    virtual void cardPlayed(Player* player, const Card* card, CardColor newColor) = 0;
+    virtual void cardPlayed(Player* player, const Card* card,
+                            CardColor newColor) = 0;
     virtual void cardDrawn(Player* player, const Card* card) = 0;
 
     virtual void playerTurnStarted(Player* player) = 0;

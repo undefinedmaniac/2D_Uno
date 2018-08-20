@@ -16,6 +16,7 @@ public:
     void placeCard(const Card* card);
     const Card* getTopCard() const;
     vector<const Card*> takeLowerCards();
+    vector<const Card*> takeAllCards();
     int count() const;
 
 private:

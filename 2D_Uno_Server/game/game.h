@@ -8,6 +8,7 @@
 #include "player.h"
 #include "deck.h"
 #include "discard_pile.h"
+#include "game_turn_manager.h"
 
 #include "interfaces/igameobserver.h"
 
@@ -28,7 +29,7 @@ public:
 
     void setObserver(IGameObserver& observer);
 
-    void startGame();
+    bool startGame();
     void resetGame();
 
     Player* addPlayer(const string& name);
@@ -41,39 +42,40 @@ public:
 
     Player* getCurrentPlayer();
     bool endTurn();
-    bool isTurnDirectionReversed();
+    bool isTurnDirectionReversed() const;
 
 private:
+    void buildDeck();
     void shuffleDeck();
 
+    void playCardHelper(const Card* card);
     int drawCardHelper(Player* player, int nCards);
     int giveNextPlayerCards(int nCards);
 
-    void advancePlayerTurn();
-    void startNextPlayerTurn();
-    void startNextPlayerTurnHelper();
-    void endPlayerTurn();
-    void endPlayerTurnHelper();
-    void skipPlayerTurn();
-    void changeTurnDirection();
+    void startNextTurn();
+    void toggleTurnDirection();
+
+    void endGame(Player* winner);
 
     IGameObserver* observer_;
 
-    Deck deck_;
+    unique_ptr<default_random_engine> randomEngine_;
+
+    vector<unique_ptr<Card>> cards_;
+    vector<unique_ptr<Player>> players_;
+    vector<unique_ptr<PrivatePlayer>> privatePlayers_;
+
+    unique_ptr<Deck> deck_;
     DiscardPile discardPile_;
     CardColor wildcardColor_;
 
-    unordered_set<unique_ptr<Player>> players_;
-    unordered_set<unique_ptr<PrivatePlayer>> privatePlayers_;
     PlayerMap playerMap_;
-    bool hasPlayerPlayed_;
+    bool hasPlayerPlayed_ = false;
 
-    Player* currentPlayer_ = nullptr;
-    deque<Player*> turnList_;
-    bool isTurnDirectionReversed_ = false;
+    GameTurnManager turnManager_;
     bool skipNextPlayerTurn_ = false;
 
-    bool isGameRunning = false;
+    bool isGameRunning_ = false;
 };
 
 }
