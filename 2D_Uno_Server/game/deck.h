@@ -10,8 +10,8 @@
 #include "card.h"
 
 using std::vector;
-using std::default_random_engine;
-using std::unique_ptr;
+using std::mt19937;
+using std::shared_ptr;
 using std::shuffle;
 using std::chrono::system_clock;
 
@@ -21,10 +21,8 @@ namespace game
 class Deck
 {
 public:
-    Deck(default_random_engine& engine);
-    Deck();
-
-    ~Deck();
+    Deck(mt19937 &engine);
+    Deck(unsigned int seed = 0);
 
     void placeCard(const Card* card);
     const Card* takeCard();
@@ -34,8 +32,7 @@ public:
 
 private:
     vector<const Card*> cards_;
-    unique_ptr<default_random_engine> randomEngine_;
-    const bool usingOutsideRandomEngine_;
+    mt19937 randomEngine_;
 };
 
 }

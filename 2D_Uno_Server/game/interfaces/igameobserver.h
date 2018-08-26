@@ -11,7 +11,7 @@ enum class CardColor;
 class IGameObserver
 {
 public:
-    virtual ~IGameObserver();
+    virtual ~IGameObserver() {}
 
     virtual void gameStarted(const Card* firstCard,
                              CardColor startingColor) = 0;
@@ -33,8 +33,8 @@ public:
     virtual void turnSkipped(Player* player) = 0;
     virtual void turnDirectionChanged(bool isReversed) = 0;
 
-    virtual void playerCalledUno(Player* player);
-    virtual void playerForgotToCallUno(Player* caller, Player* target);
+    virtual void playerCalledUno(Player* player) = 0;
+    virtual void playerForgotToCallUno(Player* caller, Player* target) = 0;
 };
 
 }

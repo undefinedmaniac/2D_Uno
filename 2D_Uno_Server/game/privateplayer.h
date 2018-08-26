@@ -2,13 +2,13 @@
 #define PRIVATEPLAYER_H
 
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 #include <algorithm>
 
 #include "card.h"
 
 using std::string;
-using std::unordered_set;
+using std::unordered_map;
 using std::find;
 
 namespace game
@@ -17,17 +17,19 @@ namespace game
 class PrivatePlayer
 {
 public:
+    typedef unordered_map<unsigned int, const Card*> CardMap;
+
     PrivatePlayer(const string& name);
 
     string getName() const;
-    const unordered_set<const Card*>& getCards() const;
+    const CardMap& getCards() const;
 
     void addCard(const Card* card);
     bool removeCard(const Card* card);
 
 private:
     const string name_;
-    unordered_set<const Card*> cards_;
+    CardMap cards_;
 };
 
 }

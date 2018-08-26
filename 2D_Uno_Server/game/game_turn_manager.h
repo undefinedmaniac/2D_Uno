@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <algorithm>
+#include <iostream>
 
 using std::deque;
 

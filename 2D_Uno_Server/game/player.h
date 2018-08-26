@@ -12,7 +12,7 @@ public:
     Player(PrivatePlayer* player);
 
     string getName() const;
-    const unordered_set<const Card*>& getCards() const;
+    const PrivatePlayer::CardMap &getCards() const;
 
 private:
     PrivatePlayer* player_;

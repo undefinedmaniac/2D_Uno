@@ -1,17 +1,57 @@
 #include <iostream>
-#include <random>
-#include <chrono>
+#include "game/game.h"
+#include "game/interfaces/igameobserver.h"
+#include "observer.h"
 
 int main()
 {
-    // obtain a time-based seed:
-    long long seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine engine(seed);
+    Observer observer;
 
-    std::uniform_int_distribution<> distr(25, 63); // define the range
+    game::Game game(0, &observer);
 
-    for(int n=0; n<40; ++n)
-        std::cout << distr(engine) << ' '; // generate numbers
+    game::Player* player1 = game.addPlayer("Player 1");
+    game::Player* player2 = game.addPlayer("Player 2");
+    game::Player* player3 = game.addPlayer("Player 3");
+
+    game.startGame();
+
+    std::cout << game.playCard(player2->getCards().at(83)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player3->getCards().at(85)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player2->getCards().at(89)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    game.drawCard();
+    game.drawCard();
+    game.drawCard();
+
+    std::cout << game.playCard(player3->getCards().at(80)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player1->getCards().at(106), game::CardColor::Yellow) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player2->getCards().at(34)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player3->getCards().at(49)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    std::cout << game.playCard(player2->getCards().at(30)) << std::endl;
+
+    std::cout << game.endTurn() << std::endl;
+
+    game.drawCard();
 
     return 0;
 }

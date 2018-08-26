@@ -4,9 +4,9 @@
 namespace game
 {
 
-enum class CardColor
+enum class CardColor : int
 {
-    Red, Yellow, Green, Blue, Wildcard
+    Red = 0, Yellow = 1, Green = 2, Blue = 3, Wildcard = 4
 };
 
 }

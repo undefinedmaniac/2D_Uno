@@ -3,13 +3,9 @@
 namespace game
 {
 
-Game::Game(IGameObserver* observer) : observer_(observer)
+Game::Game(unsigned int seed, IGameObserver* observer) :
+    observer_(observer), randomEngine_(seed), deck_(randomEngine_)
 {
-    // obtain a time-based seed:
-    long long seed = system_clock::now().time_since_epoch().count();
-    randomEngine_ = unique_ptr<default_random_engine> (new default_random_engine(seed));
-
-    deck_ = unique_ptr<Deck> (new Deck(*randomEngine_));
 }
 
 void Game::setObserver(IGameObserver& observer)
@@ -27,7 +23,7 @@ bool Game::startGame()
         for (const unique_ptr<Player>& player : players_)
             drawCardHelper(player.get(), 7);
 
-        const Card* firstCard = deck_->takeCard();
+        const Card* firstCard = deck_.takeCard();
         CardColor firstColor;
 
         if (firstCard->getColor() == CardColor::Wildcard) {
@@ -36,13 +32,15 @@ bool Game::startGame()
             std::uniform_int_distribution<> colorSelector(0, 3);
 
             unsigned int selection = static_cast<unsigned int>
-                    (colorSelector(*randomEngine_));
+                    (colorSelector(randomEngine_));
 
             wildcardColor_ = colors[selection];
             firstColor = wildcardColor_;
         } else {
             firstColor = firstCard->getColor();
         }
+
+        discardPile_.placeCard(firstCard);
 
         bool skipFirstPlayer = false;
         int numberOfCardsToDraw = 0;
@@ -74,16 +72,20 @@ bool Game::startGame()
         std::uniform_int_distribution<> playerSelector(0, maximumNumber);
 
         unsigned int selection = static_cast<unsigned int>
-                (playerSelector(*randomEngine_));
+                (playerSelector(randomEngine_));
 
         Player* firstPlayer = players_[selection].get();
 
-        drawCardHelper(firstPlayer, numberOfCardsToDraw);
+        drawCardHelper(firstPlayer, numberOfCardsToDraw);        
 
         turnManager_.startFirstTurn(firstPlayer, skipFirstPlayer);
 
-        if (observer_)
+        isGameRunning_ = true;
+
+        if (observer_) {
             observer_->gameStarted(firstCard, firstColor);
+            observer_->playerTurnStarted(firstPlayer);
+        }
 
         return true;
     }
@@ -94,14 +96,15 @@ bool Game::startGame()
 void Game::resetGame()
 {
     for (const unique_ptr<PrivatePlayer>& player : privatePlayers_) {
-        for (const Card* card : player->getCards()) {
+        for (std::pair<unsigned int, const Card*> pair : player->getCards()) {
+            const Card *card = pair.second;
             player->removeCard(card);
-            deck_->placeCard(card);
+            deck_.placeCard(card);
         }
     }
 
     for (const Card* card : discardPile_.takeAllCards())
-        deck_->placeCard(card);
+        deck_.placeCard(card);
 
     shuffleDeck();
 
@@ -120,22 +123,24 @@ Player* Game::addPlayer(const string& name)
     unique_ptr<PrivatePlayer> newPrivatePlayer(new PrivatePlayer(name));
     unique_ptr<Player> newPlayer(new Player(newPrivatePlayer.get()));
 
+    PrivatePlayer *privatePlayerPtr = newPrivatePlayer.get();
+    Player *playerPtr = newPlayer.get();
+
     privatePlayers_.push_back(std::move(newPrivatePlayer));
     players_.push_back(std::move(newPlayer));
 
-    playerMap_[newPlayer.get()] = newPrivatePlayer.get();
+    playerMap_[playerPtr] = privatePlayerPtr;
 
-    turnManager_.addPlayer(newPlayer.get());
+    turnManager_.addPlayer(playerPtr);
 
-    return newPlayer.get();
+    return playerPtr;
 }
 
 void Game::removePlayer(Player* player)
 {
     //Put the cards back in the deck and shuffle
-    const unordered_set<const Card*>& cards = player->getCards();
-    for (const Card* card : cards)
-        deck_->placeCard(card);
+    for (std::pair<unsigned int, const Card*> pair : player->getCards())
+        deck_.placeCard(pair.second);
     shuffleDeck();
 
     //End their turn if they are currently playing
@@ -202,15 +207,18 @@ bool Game::drawCard()
 bool Game::playCard(const Card* card)
 {
     if (isGameRunning_) {
-        Player* currentPlayer = turnManager_.getCurrentPlayer();
+        Player *currentPlayer = turnManager_.getCurrentPlayer();
 
-        bool playerHasCard = currentPlayer->getCards().find(card) !=
+        bool playerHasCard = currentPlayer->getCards().find(card->getId()) !=
                              currentPlayer->getCards().end();
 
         bool cardIsNotWildcard = card->getColor() != CardColor::Wildcard;
 
         if (playerHasCard && cardIsNotWildcard && !hasPlayerPlayed_) {
             const Card* topCard = getTopCard();
+
+            if (!topCard)
+                return false;
 
             //Get the topcard's color
             CardColor color;
@@ -256,7 +264,7 @@ bool Game::playCard(const Card* card, CardColor newColor)
     if (isGameRunning_) {
         Player* currentPlayer = turnManager_.getCurrentPlayer();
 
-        bool playerHasCard = currentPlayer->getCards().find(card) !=
+        bool playerHasCard = currentPlayer->getCards().find(card->getId()) !=
                              currentPlayer->getCards().end();
 
         bool cardIsWildcard = card->getColor() == CardColor::Wildcard;
@@ -337,13 +345,13 @@ void Game::buildDeck()
     }
 
     for (const unique_ptr<Card>& card : cards_) {
-        deck_->placeCard(card.get());
+        deck_.placeCard(card.get());
     }
 }
 
 void Game::shuffleDeck()
 {
-    deck_->shuffle();
+    deck_.shuffle();
 
     if (observer_)
         observer_->deckShuffled();
@@ -367,12 +375,12 @@ int Game::drawCardHelper(Player* player, int nCards)
     int numberOfCardsDrawn = 0;
 
     for (int i = 0; i < nCards; i++) {
-        if (deck_->count() == 0) {
+        if (deck_.count() == 0) {
             if (discardPile_.count() >= 2) {
                 vector<const Card*> cards = discardPile_.takeLowerCards();
 
                 for (const Card* card : cards)
-                    deck_->placeCard(card);
+                    deck_.placeCard(card);
 
                 shuffleDeck();
             }
@@ -382,7 +390,7 @@ int Game::drawCardHelper(Player* player, int nCards)
             }
         }
 
-        const Card* card = deck_->takeCard();
+        const Card* card = deck_.takeCard();
         playerMap_[player]->addCard(card);
         numberOfCardsDrawn++;
 
@@ -396,6 +404,10 @@ int Game::drawCardHelper(Player* player, int nCards)
 int Game::giveNextPlayerCards(int nCards)
 {
     Player* target = turnManager_.getNextPlayer();
+
+    if (!target)
+        return 0;
+
     return drawCardHelper(target, nCards);
 }
 
@@ -407,6 +419,7 @@ void Game::startNextTurn()
     newPlayer = turnManager_.startNextTurn(skipNextPlayerTurn_,
                                            &skippedPlayer);
 
+    hasPlayerPlayed_ = false;
     skipNextPlayerTurn_ = false;
 
     if (observer_) {

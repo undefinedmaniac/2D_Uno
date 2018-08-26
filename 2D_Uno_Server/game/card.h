@@ -14,10 +14,14 @@ public:
 
     CardColor getColor() const;
     CardType getType() const;
+    unsigned int getId() const;
 
 private:
+    static unsigned int idCount_;
+
     const CardColor color_;
     const CardType type_;
+    const unsigned int id_;
 };
 
 }

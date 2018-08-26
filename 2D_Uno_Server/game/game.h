@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <deque>
 #include <memory>
+#include <iostream>
 
 #include "player.h"
 #include "deck.h"
@@ -25,7 +26,7 @@ typedef unordered_map<Player*, PrivatePlayer*> PlayerMap;
 class Game
 {
 public:
-    Game(IGameObserver* observer = nullptr);
+    Game(unsigned int seed = 0, IGameObserver* observer = nullptr);
 
     void setObserver(IGameObserver& observer);
 
@@ -59,13 +60,13 @@ private:
 
     IGameObserver* observer_;
 
-    unique_ptr<default_random_engine> randomEngine_;
+    mt19937 randomEngine_;
 
     vector<unique_ptr<Card>> cards_;
     vector<unique_ptr<Player>> players_;
     vector<unique_ptr<PrivatePlayer>> privatePlayers_;
 
-    unique_ptr<Deck> deck_;
+    Deck deck_;
     DiscardPile discardPile_;
     CardColor wildcardColor_;
 

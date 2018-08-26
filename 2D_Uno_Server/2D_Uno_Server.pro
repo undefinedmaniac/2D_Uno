@@ -23,4 +23,5 @@ HEADERS += \
     game/interfaces/igameobserver.h \
     game/player.h \
     game/discard_pile.h \
-    game/game_turn_manager.h
+    game/game_turn_manager.h \
+    observer.h

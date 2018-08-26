@@ -52,11 +52,14 @@ Player *GameTurnManager::startNextTurn(bool skipPlayer, Player** skippedPlayer)
         putLastPlayer(currentPlayer_);
 
     if (skipPlayer) {
-        (*skippedPlayer) = getNextPlayer();
+        if (skippedPlayer)
+            (*skippedPlayer) = getNextPlayer();
+
         advanceQueue();
     }
     else {
-        (*skippedPlayer) = nullptr;
+        if (skippedPlayer)
+            (*skippedPlayer) = nullptr;
     }
 
     currentPlayer_ = takeNextPlayer();
@@ -85,7 +88,8 @@ Player* GameTurnManager::takeNextPlayer()
 {
     Player* nextPlayer;
 
-    if (turnList_.size() >= 2) {
+    if (turnList_.size() >= 2 ||
+            (turnList_.size() == 1 && currentPlayer_)) {
         if (isTurnDirectionRevered_) {
             nextPlayer = turnList_.back();
             turnList_.pop_back();
@@ -112,7 +116,8 @@ void GameTurnManager::putLastPlayer(Player *player)
 
 Player* GameTurnManager::getNextPlayer()
 {
-    if (turnList_.size() >= 2) {
+    if (turnList_.size() >= 2 ||
+            (turnList_.size() == 1 && currentPlayer_)) {
         if (isTurnDirectionRevered_)
             return turnList_.back();
         else

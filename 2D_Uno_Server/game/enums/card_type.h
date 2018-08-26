@@ -4,7 +4,7 @@
 namespace game
 {
 
-enum class CardType
+enum class CardType : int
 {
     Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine, Skip, Reverse,
     DrawTwo, Wildcard, DrawFourWildcard
