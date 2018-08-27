@@ -3,7 +3,7 @@
 namespace game
 {
 
-PrivatePlayer::PrivatePlayer(const string& name) : name_(name)
+PrivatePlayer::PrivatePlayer(const string &name) : name_(name)
 {
 }
 
@@ -12,17 +12,17 @@ std::string PrivatePlayer::getName() const
     return name_;
 }
 
-const PrivatePlayer::CardMap& PrivatePlayer::getCards() const
+const PrivatePlayer::CardMap &PrivatePlayer::getCards() const
 {
     return cards_;
 }
 
-void PrivatePlayer::addCard(const Card* card)
+void PrivatePlayer::addCard(const Card *card)
 {
     cards_[card->getId()] = card;
 }
 
-bool PrivatePlayer::removeCard(const Card* card)
+bool PrivatePlayer::removeCard(const Card *card)
 {
     PrivatePlayer::CardMap::iterator position = cards_.find(card->getId());
 
@@ -32,6 +32,11 @@ bool PrivatePlayer::removeCard(const Card* card)
     }
 
     return false;
+}
+
+unsigned int PrivatePlayer::cardCount() const
+{
+    return static_cast<unsigned int>(cards_.size());
 }
 
 }

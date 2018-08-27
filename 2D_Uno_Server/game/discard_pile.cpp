@@ -3,12 +3,12 @@
 namespace game
 {
 
-void DiscardPile::placeCard(const Card* card)
+void DiscardPile::placeCard(const Card *card)
 {
     cards_.push_back(card);
 }
 
-const Card* DiscardPile::getTopCard() const
+const Card *DiscardPile::getTopCard() const
 {
     if (!cards_.empty())
         return cards_.back();
@@ -41,9 +41,9 @@ vector<const Card*> DiscardPile::takeAllCards()
     return cards;
 }
 
-int DiscardPile::count() const
+unsigned int DiscardPile::count() const
 {
-    return static_cast<int>(cards_.size());
+    return static_cast<unsigned int>(cards_.size());
 }
 
 }

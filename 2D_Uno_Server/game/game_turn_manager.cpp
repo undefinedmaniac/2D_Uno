@@ -5,10 +5,7 @@ namespace game
 
 void GameTurnManager::addPlayer(Player* player)
 {
-    if (isTurnDirectionRevered_)
-        turnList_.push_front(player);
-    else
-        turnList_.push_back(player);
+    putLastPlayer(player);
 }
 
 bool GameTurnManager::removePlayer(Player* player)

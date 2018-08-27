@@ -17,4 +17,9 @@ const PrivatePlayer::CardMap &Player::getCards() const
     return player_->getCards();
 }
 
+unsigned int Player::cardCount() const
+{
+    return player_->cardCount();
+}
+
 }

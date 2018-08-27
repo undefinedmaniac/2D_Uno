@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <algorithm>
+#include <iostream>
 
 #include "card.h"
 
@@ -26,6 +27,8 @@ public:
 
     void addCard(const Card* card);
     bool removeCard(const Card* card);
+
+    unsigned int cardCount() const;
 
 private:
     const string name_;

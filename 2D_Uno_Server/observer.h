@@ -83,16 +83,22 @@ public:
     void gameEnded(game::Player *winner) override {
         std::cout << "Game ended - Winner: " << winner->getName() << std::endl;
     }
-    void playerCardCountChanged(game::Player *player, int newCount) override {
+    void playedJoined(game::Player *player) override {
+        std::cout << "Player joined: " << player->getName() << std::endl;
+    }
+    void playedLeft(game::Player *player) override {
+        std::cout << "Player left: " << player->getName() << std::endl;
+    }
+    void playerCardCountChanged(game::Player *player, unsigned int newCount) override {
         std::cout << "Player card count changed: " << player->getName() << " NewCount: " << newCount << std::endl;
     }
     void deckShuffled() override {
         print("Deck shuffled!");
     }
-    void deckCountChanged(int newCount) override {
+    void deckCountChanged(unsigned int newCount) override {
         std::cout << "Deck count changed: " << newCount << std::endl;
     }
-    void discardPileCountChanged(int newCount) override {
+    void discardPileCountChanged(unsigned int newCount) override {
         std::cout << "Discard count changed: " << newCount << std::endl;
     }
     void cardPlayed(game::Player *player, const game::Card *card) override {

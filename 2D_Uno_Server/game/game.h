@@ -30,18 +30,18 @@ public:
 
     void setObserver(IGameObserver& observer);
 
-    bool startGame();
-    void resetGame();
+    bool start();
+    void reset();
 
-    Player* addPlayer(const string& name);
-    void removePlayer(Player* player);
+    Player *addPlayer(const string &name);
+    void removePlayer(Player *player);
 
-    const Card* getTopCard() const;
-    bool drawCard();
-    bool playCard(const Card* card);
-    bool playCard(const Card* card, CardColor newColor);
+    const Card *getTopCard() const;
+    const Card *drawCard();
+    bool playCard(const Card *card);
+    bool playCard(const Card *card, CardColor newColor);
 
-    Player* getCurrentPlayer();
+    Player *getCurrentPlayer();
     bool endTurn();
     bool isTurnDirectionReversed() const;
 
@@ -49,14 +49,14 @@ private:
     void buildDeck();
     void shuffleDeck();
 
-    void playCardHelper(const Card* card);
-    int drawCardHelper(Player* player, int nCards);
+    void playCardHelper(const Card *card);
+    vector<const Card*> drawCardHelper(Player *player, int nCards);
     int giveNextPlayerCards(int nCards);
 
     void startNextTurn();
     void toggleTurnDirection();
 
-    void endGame(Player* winner);
+    void endGame(Player *winner);
 
     IGameObserver* observer_;
 

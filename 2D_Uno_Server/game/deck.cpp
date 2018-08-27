@@ -7,25 +7,21 @@ Deck::Deck(mt19937 &engine) : randomEngine_(engine)
 {
 }
 
-Deck::Deck(unsigned int seed) : randomEngine_(seed)
-{
-}
-
-void Deck::placeCard(const Card* card)
+void Deck::placeCard(const Card *card)
 {
     cards_.push_back(card);
 }
 
-const Card* Deck::takeCard()
+const Card *Deck::takeCard()
 {
     const Card* card = cards_.back();
     cards_.pop_back();
     return card;
 }
 
-int Deck::count() const
+unsigned int Deck::count() const
 {
-    return static_cast<int>(cards_.size());
+    return static_cast<unsigned int>(cards_.size());
 }
 
 void Deck::shuffle()
