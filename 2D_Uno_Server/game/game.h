@@ -26,11 +26,22 @@ typedef unordered_map<Player*, PrivatePlayer*> PlayerMap;
 class Game
 {
 public:
+    enum class Result {
+        Success,          // The operation was successful
+
+        NotEnoughPlayers, // Not enough players to complete the operation
+
+        GameStateInvalid, // The game is not in the correct state for the
+                          // operation (running / stopped)
+
+
+    };
+
     Game(unsigned int seed = 0, IGameObserver* observer = nullptr);
 
     void setObserver(IGameObserver& observer);
 
-    bool start();
+    Result start();
     void reset();
 
     Player *addPlayer(const string &name);
@@ -51,7 +62,7 @@ private:
 
     void playCardHelper(const Card *card);
     vector<const Card*> drawCardHelper(Player *player, int nCards);
-    int giveNextPlayerCards(int nCards);
+    unsigned int giveNextPlayerCards(int nCards);
 
     void startNextTurn();
     void toggleTurnDirection();

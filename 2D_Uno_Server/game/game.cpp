@@ -3,6 +3,8 @@
 namespace game
 {
 
+using Result = Game::Result;
+
 Game::Game(unsigned int seed, IGameObserver* observer) :
     observer_(observer), randomEngine_(seed), deck_(randomEngine_)
 {
@@ -13,9 +15,12 @@ void Game::setObserver(IGameObserver& observer)
     observer_ = &observer;
 }
 
-bool Game::start()
+Result Game::start()
 {
-    if (players_.size() >= 2 && !isGameRunning_) {
+    bool gameIsNotRunning = !isGameRunning_;
+    bool hasEnoughPlayers = players_.size() >= 2;
+
+    if (gameIsNotRunning && hasEnoughPlayers) {
 
         buildDeck();
         shuffleDeck();
@@ -87,10 +92,13 @@ bool Game::start()
             observer_->playerTurnStarted(firstPlayer);
         }
 
-        return true;
+        return Result::Success;
     }
 
-    return false;
+    if (!gameIsNotRunning)
+        return Result::GameStateInvalid;
+    else if (!hasEnoughPlayers)
+        return Result::NotEnoughPlayers;
 }
 
 void Game::reset()
@@ -448,14 +456,14 @@ vector<const Card*> Game::drawCardHelper(Player *player, int nCards)
     return cardsDrawn;
 }
 
-int Game::giveNextPlayerCards(int nCards)
+unsigned int Game::giveNextPlayerCards(int nCards)
 {
     Player* target = turnManager_.getNextPlayer();
 
     if (!target)
         return 0;
 
-    return drawCardHelper(target, nCards);
+    return drawCardHelper(target, nCards).size();
 }
 
 void Game::startNextTurn()
