@@ -34,7 +34,9 @@ public:
         GameStateInvalid, // The game is not in the correct state for the
                           // operation (running / stopped)
 
+        PlayerNameTaken,  // The provided username is already taken
 
+        InvalidAction     // The attempted action violates game rules
     };
 
     Game(unsigned int seed = 0, IGameObserver* observer = nullptr);
@@ -44,13 +46,13 @@ public:
     Result start();
     void reset();
 
-    Player *addPlayer(const string &name);
+    Player *addPlayer(const string &name, Result *result = nullptr);
     void removePlayer(Player *player);
 
     const Card *getTopCard() const;
     const Card *drawCard();
-    bool playCard(const Card *card);
-    bool playCard(const Card *card, CardColor newColor);
+    Result playCard(const Card *card);
+    Result playCard(const Card *card, CardColor newColor);
 
     Player *getCurrentPlayer();
     bool endTurn();

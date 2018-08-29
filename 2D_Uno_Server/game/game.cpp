@@ -94,11 +94,12 @@ Result Game::start()
 
         return Result::Success;
     }
-
-    if (!gameIsNotRunning)
-        return Result::GameStateInvalid;
-    else if (!hasEnoughPlayers)
-        return Result::NotEnoughPlayers;
+    else {
+        if (!gameIsNotRunning)
+            return Result::GameStateInvalid;
+        else // !hasEnoughPlayers
+            return Result::NotEnoughPlayers;
+    }
 }
 
 void Game::reset()
@@ -129,12 +130,16 @@ void Game::reset()
         observer_->gameReset();
 }
 
-Player* Game::addPlayer(const string& name)
+Player* Game::addPlayer(const string& name, Result *result)
 {
     for (vector<unique_ptr<Player>>::iterator i = players_.begin();
          i != players_.end(); i++) {
-        if ((*i)->getName() == name)
+        if ((*i)->getName() == name) {
+            if (result)
+                *result = Result::PlayerNameTaken;
+
             return nullptr;
+        }
     }
 
     unique_ptr<PrivatePlayer> newPrivatePlayer(new PrivatePlayer(name));
@@ -155,6 +160,9 @@ Player* Game::addPlayer(const string& name)
 
     if (isGameRunning_)
         drawCardHelper(playerPtr, 7);
+
+    if (result)
+        *result = Result::Success;
 
     return playerPtr;
 }
@@ -239,7 +247,7 @@ const Card *Game::drawCard()
     return nullptr;
 }
 
-bool Game::playCard(const Card* card)
+Result Game::playCard(const Card* card)
 {
     if (isGameRunning_) {
         Player *currentPlayer = turnManager_.getCurrentPlayer();
@@ -251,9 +259,6 @@ bool Game::playCard(const Card* card)
 
         if (playerHasCard && cardIsNotWildcard && !hasPlayerPlayed_) {
             const Card* topCard = getTopCard();
-
-            if (!topCard)
-                return false;
 
             //Get the topcard's color
             CardColor color;
@@ -287,14 +292,16 @@ bool Game::playCard(const Card* card)
                         break;
                 }
 
-                return true;
+                return Result::Success;
            }
         }
+        return Result::InvalidAction;
     }
-    return false;
+
+    return Result::GameStateInvalid;
 }
 
-bool Game::playCard(const Card* card, CardColor newColor)
+Result Game::playCard(const Card* card, CardColor newColor)
 {
     if (isGameRunning_) {
         Player* currentPlayer = turnManager_.getCurrentPlayer();
@@ -320,11 +327,11 @@ bool Game::playCard(const Card* card, CardColor newColor)
                 giveNextPlayerCards(4);
             }
 
-            return true;
+            return Result::Success;
         }
     }
 
-    return false;
+    return Result::GameStateInvalid;
 }
 
 Player* Game::getCurrentPlayer()
