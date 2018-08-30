@@ -345,9 +345,22 @@ Result Game::playCard(const Card* card, CardColor newColor)
     return Result::GameStateInvalid;
 }
 
-void Game::callUno()
+Result Game::callUno()
 {
+    if (!isGameRunning_)
+        return Result::GameStateInvalid;
 
+    Player *player = getCurrentPlayer();
+
+    bool wasCorrect = player->cardCount() == 1;
+
+    if (observer_)
+        observer_->playerCalledUno(player, wasCorrect);
+
+    if (wasCorrect)
+        callManager_.callUno(player);
+    else
+        drawCardHelper(player, 2);
 }
 
 bool Game::callOutPlayer(Player *target)

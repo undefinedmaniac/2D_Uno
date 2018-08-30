@@ -126,10 +126,10 @@ public:
     void turnDirectionChanged(bool isReversed) override {
         std::cout << "Is turn directon reversed: " << isReversed << std::endl;
     }
-    void playerCalledUno(game::Player* player) override {
+    void playerCalledUno(game::Player* player, bool wasCorrect) override {
         std::cout << "Player called uno: " << player->getName() << std::endl;
     }
-    void playerForgotToCallUno(game::Player* caller, game::Player* target) override {
+    void playerForgotToCallUno(game::Player* caller, game::Player* target, bool wasCorrect) override {
         std::cout << "Player forogt to call uno - Caller: " <<
                      caller->getName() << " Target: " << target->getName() << std::endl;
     }

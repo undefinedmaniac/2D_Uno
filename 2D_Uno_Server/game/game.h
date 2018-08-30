@@ -12,6 +12,7 @@
 #include "deck.h"
 #include "discard_pile.h"
 #include "game_turn_manager.h"
+#include "game_call_manager.h"
 
 #include "interfaces/igameobserver.h"
 
@@ -178,7 +179,7 @@ public:
      * Calls Uno for a player when they have only one card left. If they have
      * more than one card, the game will force them to draw two cards.
      */
-    void callUno();
+    Result callUno();
 
     /**
      * @brief callOutPlayer Call out another player for not saying Uno
@@ -242,6 +243,8 @@ private:
 
     GameTurnManager turnManager_;
     bool skipNextPlayerTurn_ = false;
+
+    GameCallManager callManager_;
 
     bool isGameRunning_ = false;
 };

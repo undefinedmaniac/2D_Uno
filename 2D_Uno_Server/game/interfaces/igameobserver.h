@@ -35,8 +35,8 @@ public:
     virtual void turnSkipped(Player *player) = 0;
     virtual void turnDirectionChanged(bool isReversed) = 0;
 
-    virtual void playerCalledUno(Player *player) = 0;
-    virtual void playerForgotToCallUno(Player *caller, Player *target) = 0;
+    virtual void playerCalledUno(Player *player, bool wasCorrect) = 0;
+    virtual void playerForgotToCallUno(Player *caller, Player *target, bool wasCorrect) = 0;
 };
 
 }

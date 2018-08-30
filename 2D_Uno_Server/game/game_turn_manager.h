@@ -97,7 +97,7 @@ private:
     void putLastPlayer(Player* player);
     void advanceQueue();
 
-    Player* currentPlayer_ = nullptr;
+    Player *currentPlayer_ = nullptr;
     deque<Player*> turnList_;
     bool isTurnDirectionRevered_ = false;
 };
