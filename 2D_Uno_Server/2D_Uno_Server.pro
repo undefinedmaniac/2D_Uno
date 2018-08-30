@@ -11,7 +11,8 @@ SOURCES += \
     game/game.cpp \
     game/player.cpp \
     game/game_turn_manager.cpp \
-    game/discard_pile.cpp
+    game/discard_pile.cpp \
+    game/game_call_manager.cpp
 
 HEADERS += \
     game/card.h \
@@ -24,4 +25,6 @@ HEADERS += \
     game/player.h \
     game/discard_pile.h \
     game/game_turn_manager.h \
-    observer.h
+    observer.h \
+    utility/make_unique.h \
+    game/game_call_manager.h

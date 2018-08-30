@@ -21,7 +21,6 @@ Result Game::start()
     bool hasEnoughPlayers = players_.size() >= 2;
 
     if (gameIsNotRunning && hasEnoughPlayers) {
-
         buildDeck();
         shuffleDeck();
 
@@ -142,8 +141,10 @@ Player* Game::addPlayer(const string& name, Result *result)
         }
     }
 
-    unique_ptr<PrivatePlayer> newPrivatePlayer(new PrivatePlayer(name));
-    unique_ptr<Player> newPlayer(new Player(newPrivatePlayer.get()));
+    unique_ptr<PrivatePlayer> newPrivatePlayer =
+            make_unique<PrivatePlayer>(name);
+    unique_ptr<Player> newPlayer =
+            make_unique<Player>(newPrivatePlayer.get());
 
     PrivatePlayer *privatePlayerPtr = newPrivatePlayer.get();
     Player *playerPtr = newPlayer.get();
@@ -229,19 +230,27 @@ const Card *Game::getTopCard() const
     return discardPile_.getTopCard();
 }
 
-const Card *Game::drawCard()
+const Card *Game::drawCard(Result *result)
 {
     if (isGameRunning_) {
         vector<const Card*> cardsDrawn =
                 drawCardHelper(turnManager_.getCurrentPlayer(), 1);
 
         if (cardsDrawn.size() == 1) {
+            if (result)
+                *result = Result::Success;
+
             return cardsDrawn.front();
         }
         else {
             //End the player's turn if they are unable to draw cards
             startNextTurn();
+            if (result)
+                *result = Result::RanOutOfCards;
         }
+    } else {
+        if (result)
+            *result = Result::GameStateInvalid;
     }
 
     return nullptr;
@@ -329,9 +338,21 @@ Result Game::playCard(const Card* card, CardColor newColor)
 
             return Result::Success;
         }
+
+        return Result::InvalidAction;
     }
 
     return Result::GameStateInvalid;
+}
+
+void Game::callUno()
+{
+
+}
+
+bool Game::callOutPlayer(Player *target)
+{
+
 }
 
 Player* Game::getCurrentPlayer()
@@ -376,11 +397,11 @@ void Game::buildDeck()
     }
 
     for (int i = 0; i < 4; i++) {
-        unique_ptr<Card> wildcard(new Card(CardColor::Wildcard,
-                                           CardType::Wildcard));
+        unique_ptr<Card> wildcard = make_unique<Card>(CardColor::Wildcard,
+                                                           CardType::Wildcard);
 
-        unique_ptr<Card> drawWildcard(new Card(CardColor::Wildcard,
-                                               CardType::DrawFourWildcard));
+        unique_ptr<Card> drawWildcard = make_unique<Card>
+                (CardColor::Wildcard, CardType::DrawFourWildcard);
 
         cards_.push_back(std::move(wildcard));
         cards_.push_back(std::move(drawWildcard));
@@ -470,7 +491,8 @@ unsigned int Game::giveNextPlayerCards(int nCards)
     if (!target)
         return 0;
 
-    return drawCardHelper(target, nCards).size();
+    return static_cast<unsigned int>
+            (drawCardHelper(target, nCards).size());
 }
 
 void Game::startNextTurn()
