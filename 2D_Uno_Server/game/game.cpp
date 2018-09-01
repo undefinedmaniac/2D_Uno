@@ -351,7 +351,6 @@ Result Game::callUno()
         return Result::GameStateInvalid;
 
     Player *player = getCurrentPlayer();
-
     bool wasCorrect = player->cardCount() == 1;
 
     if (observer_)
@@ -359,13 +358,33 @@ Result Game::callUno()
 
     if (wasCorrect)
         callManager_.callUno(player);
-    else
-        drawCardHelper(player, 2);
+
+    return Result::Success;
 }
 
-bool Game::callOutPlayer(Player *target)
+Result Game::callOutPlayer(Player *caller, Player *target)
 {
+    if (!isGameRunning_)
+        return Result::GameStateInvalid;
 
+    bool playerIsNotCurrentlyPlaying = target != getCurrentPlayer();
+    bool playerHasOneCard = target->cardCount() == 1;
+    bool playerHasntCalledUno = callManager_.hasPlayerCalledUno(target);
+
+    if  (playerIsNotCurrentlyPlaying && playerHasOneCard &&
+         playerHasntCalledUno) {
+        if (observer_)
+            observer_->playerForgotToCallUno(caller, target, true);
+
+        drawCardHelper(target, 2);
+
+        return Result::Success;
+    } else {
+        if (observer_)
+            observer_->playerForgotToCallUno(caller, target, false);
+
+        return Result::InvalidAction;
+    }
 }
 
 Player* Game::getCurrentPlayer()
@@ -440,6 +459,8 @@ void Game::playCardHelper(const Card *card)
     playerMap_[currentPlayer]->removeCard(card);
     discardPile_.placeCard(card);
 
+    callManager_.resetPlayerCall(currentPlayer);
+
     hasPlayerPlayed_ = true;
 
     if (observer_) {
@@ -480,6 +501,9 @@ vector<const Card*> Game::drawCardHelper(Player *player, int nCards)
         if (observer_)
             observer_->cardDrawn(player, card);
     }
+
+    if (cardsDrawn.size() >= 1)
+        callManager_.resetPlayerCall(player);
 
     if (observer_) {
         if (cardsDrawn.size() >= 1)

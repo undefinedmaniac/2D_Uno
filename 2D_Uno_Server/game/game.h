@@ -175,6 +175,7 @@ public:
 
     /**
      * @brief callUno Calls Uno for a player when they have only one card left
+     * @return The result of the action
      *
      * Calls Uno for a player when they have only one card left. If they have
      * more than one card, the game will force them to draw two cards.
@@ -183,14 +184,14 @@ public:
 
     /**
      * @brief callOutPlayer Call out another player for not saying Uno
+     * @param caller The player who is calling
      * @param target The player to call out
-     * @return True if the other player was called out, false if they had
-     * already called Uno or they had more than one card left
+     * @return The result of the action
      *
      * Calls out another player who forgot to call Uno during their turn.
      * Forces the called out player to draw two cards.
      */
-    bool callOutPlayer(Player *target);
+    Result callOutPlayer(Player *caller, Player *target);
 
     /**
      * @brief getCurrentPlayer Get the current player
