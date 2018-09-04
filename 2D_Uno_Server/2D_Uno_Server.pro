@@ -3,6 +3,8 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
+LIBS += -lws2_32
+
 SOURCES += \
         main.cpp \
     game/card.cpp \
@@ -12,7 +14,8 @@ SOURCES += \
     game/player.cpp \
     game/game_turn_manager.cpp \
     game/discard_pile.cpp \
-    game/game_call_manager.cpp
+    game/game_call_manager.cpp \
+    network/liststreamsocket.cpp
 
 HEADERS += \
     game/card.h \
@@ -27,4 +30,10 @@ HEADERS += \
     game/game_turn_manager.h \
     observer.h \
     utility/make_unique.h \
-    game/game_call_manager.h
+    game/game_call_manager.h \
+    network/liststreamsocket.h
+
+win32: LIBS += -L$$PWD/../../../libraries/c++/boost_1_68_0/lib/ -llibboost_system-mgw51-mt-d-x64-1_68.dll
+
+INCLUDEPATH += $$PWD/../../../libraries/c++/boost_1_68_0/include
+DEPENDPATH += $$PWD/../../../libraries/c++/boost_1_68_0/include

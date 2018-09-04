@@ -1,0 +1,12 @@
+INPUT(
+./debug\main.o
+./debug\card.o
+./debug\deck.o
+./debug\privateplayer.o
+./debug\game.o
+./debug\player.o
+./debug\game_turn_manager.o
+./debug\discard_pile.o
+./debug\game_call_manager.o
+./debug\server.o
+);
