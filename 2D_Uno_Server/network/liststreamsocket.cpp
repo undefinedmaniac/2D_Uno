@@ -1,161 +1,213 @@
 #include "liststreamsocket.h"
 
-namespace network
+ListStreamSocket::ListStreamSocket(shared_socket socket) :
+    socket_(socket)
 {
-
-ListStreamSocket::ListStreamSocket(tcp::socket *socket) : socket_(socket)
-{
-
 }
 
 tcp::socket *ListStreamSocket::getSocket()
 {
-    return socket_;
+    return socket_.get();
 }
 
-const tcp::socket *ListStreamSocket::getSocket() const
+void ListStreamSocket::getMessage(ListStreamSocket::callback callback)
 {
-    return socket_;
-}
+    if (messageQueue_.empty()) {
+        callback_ = callback;
 
-void ListStreamSocket::asyncRead(ListStreamSocket::readCallback callback)
-{
-    callback_ = callback;
+        std::shared_ptr<char> buffer(new char[bufferLength_],
+                                     std::default_delete<char[]>());
 
-    socket_->async_read_some(
-                boost::asio::buffer(readBuffer_),
-                boost::bind(&ListStreamSocket::handleRead, this,
-                            boost::asio::placeholders::error,
-                            boost::asio::placeholders::bytes_transferred));
-}
-
-void ListStreamSocket::handleRead(const boost::system::error_code &error,
-                                  size_t bytes_transferred)
-{
-    const unsigned long long oldLength = messageBuffer_.size();
-
-    const unsigned long long newSize = oldLength + bytes_transferred;
-
-    if (newSize > 5120) {
-        abortWithResult(Result::ContentTooLarge);
-        return;
+        socket_->async_read_some(boost::asio::buffer(buffer.get(), bufferLength_),
+                                 boost::bind(&ListStreamSocket::readHandler,
+                                             this,
+                                             boost::asio::placeholders::error,
+                                             boost::asio::placeholders::bytes_transferred,
+                                             buffer));
     }
+    else {
+        std::vector<std::string> message = messageQueue_.front();
+        messageQueue_.pop_front();
 
-    messageBuffer_.reserve(newSize);
-
-    for (const char &character : readBuffer_)
-        messageBuffer_.push_back(character);
-
-    if (messageHeader_.empty()) {
-        const unsigned long long size = messageBuffer_.size();
-        for (; spaceSearchPos_ < size; spaceSearchPos_++) {
-            if (messageBuffer_[spaceSearchPos_] == ' ')
-                break;
-        }
-
-        if (spaceSearchPos_ == size)
-            return;
-
-        if (!fetchHeader()) {
-            abortWithResult(Result::InvalidHeader);
-            return;
-        }
-
-        messageLength_ = spaceSearchPos_ + messageHeader_.back() + 1;
-
-        if (messageLength_ > 5120) {
-            abortWithResult(Result::ContentTooLarge);
-            return;
-        }
+        callback(this, Result::Success, message);
     }
+}
 
-    if (messageBuffer_.size() < messageLength_)
-        return;
+void ListStreamSocket::setBufferLength(unsigned int length)
+{
+    if (length <= maxMessageLength_)
+        bufferLength_ = length;
+}
 
-    string messageContent = messageBuffer_.substr(spaceSearchPos_ + 1,
-                                                  messageHeader_.back());
+void ListStreamSocket::setMaxMessageLength(unsigned int length)
+{
+    if (length >= bufferLength_)
+        maxMessageLength_ = length;
+}
 
-    const unsigned long long headerSize = messageHeader_.size();
+unsigned int ListStreamSocket::getBufferLength() const
+{
+    return bufferLength_;
+}
 
-    vector<string> list(headerSize);
+unsigned int ListStreamSocket::getMaxMessageLength() const
+{
+    return maxMessageLength_;
+}
 
-    for (unsigned int i = 0; i < headerSize; i++) {
-        unsigned int startPos, endPos, length;
+void ListStreamSocket::readHandler(const boost::system::error_code &error,
+                                   std::size_t charsRead,
+                                   std::shared_ptr<char> data)
+{
+    if (!error) {
+        // Dump the new characters into the main buffer
+        const unsigned long long oldSize = messageBuffer_.size();
+        const unsigned long long newSize = oldSize + charsRead;
 
-        if (i == 0)
-            startPos = 0;
-        else
-            startPos = messageHeader_[i - 1];
+        if (newSize <= maxMessageLength_) {
+            messageBuffer_.reserve(messageBuffer_.size() + charsRead);
+            messageBuffer_.append(data.get(), charsRead);
 
-        if (i == headerSize - 1)
-            endPos = static_cast<unsigned int>(messageContent.size());
-        else
-            endPos = messageHeader_[i];
-
-        length = endPos - startPos;
-
-        if (startPos < headerSize &&
-            endPos < headerSize && length <= headerSize) {
-            list.push_back(messageContent.substr(startPos, length));
+            if (!processNewData(oldSize, newSize))
+                getMessage(callback_);
         }
         else {
-            abortWithResult(Result::InvalidHeader);
-            return;
+            // The new size was too big!
+            abort(Result::BufferOverflow);
         }
     }
-
-    resetData(messageLength_);
-
-    if (callback_)
-        callback_(Result::Success, list);
+    else {
+        // We had some problems reading from the socket
+        if (error == boost::asio::error::eof)
+            abort(Result::EndOfFile);
+        else
+            abort(Result::UnknownError);
+    }
 }
 
-bool ListStreamSocket::fetchHeader()
+bool ListStreamSocket::processNewData(unsigned long long oldSize,
+                                      unsigned long long newSize)
+{   
+    bool removedMessage = false;
+
+    while (true) {
+        if (headerData_.empty()) {
+            // Search for the end of the header
+            const size_t position = messageBuffer_.find(' ', oldSize);
+
+            // We found it - position is the length of the header data
+            if (position != std::string::npos) {
+                // Fetch the header
+                if (!fetchHeader(position)) {
+                    abort(Result::InvalidHeader);
+                    return removedMessage;
+                }
+            }
+            else {
+                // Leave if we don't have the whole header yet
+                return removedMessage;
+            }
+
+            // Calculate content start pos and total message length
+            contentStartPos_ = position + 1;
+            messageLength_ = contentStartPos_ + headerData_.back();
+        }
+
+        // Leave if we don't have the entire message yet
+        if (newSize < messageLength_)
+            return removedMessage;
+
+        // Grab the content of the message
+        std::vector<std::string> contentList =
+                grabContent(messageBuffer_.substr(contentStartPos_));
+
+        removedMessage = true;
+
+        callback_(this, Result::Success, contentList);
+
+        removeMessage();
+    }
+}
+
+bool ListStreamSocket::fetchHeader(size_t length)
 {
-    string header = messageBuffer_.substr(0, spaceSearchPos_);
-    vector<string> headerData;
+    const std::string headerString = messageBuffer_.substr(0, length);
 
-    //Split the string by '.'
-    istringstream stream(header);
-    string data;
-    while (std::getline(stream, data, '.'))
-        headerData.push_back(data);
+    // Split the header apart
+    std::vector<std::string> splitData;
+    boost::algorithm::split(splitData,
+                            headerString,
+                            boost::algorithm::is_any_of("."));
 
-    if (!headerData.empty()) {
-        messageHeader_.resize(headerData.size());
+    // Prepare to fill the headerData vector
+    const size_t splitSize = splitData.size();
 
-        for (unsigned int i = 0; i < headerData.size(); i++) {
-            try {
-                int number = std::stoi(headerData[i]);
+    // Check if we have any header data
+    if (splitSize == 0)
+        return false;
 
-                if (number > 0)
-                    messageHeader_[i] = static_cast<unsigned int>(number);
-                else
-                    return false;
-            } catch (std::exception error) {
-                return false;
+    headerData_.resize(splitSize);
+
+    bool dataIsValid = true;
+    for (unsigned int i = 0; i < splitSize; i++) {
+        try {
+            unsigned long number = std::stoul(splitData[i]);  
+
+            // If the number is greater than 0 and greater than the last number
+            // read
+            if (number > 0 && (i == 0 || number > headerData_[i - 1])) {
+                headerData_[i] = number;
+            }
+            else {
+                dataIsValid = false;
+                break;
             }
         }
-
-        return true;
+        catch (...) {
+            dataIsValid = false;
+            break;
+        }
     }
 
-    return false;
+    return dataIsValid;
 }
 
-void ListStreamSocket::resetData(unsigned int length)
+std::vector<std::string> ListStreamSocket::grabContent(const std::string &content)
 {
-    messageBuffer_.erase(0, length);
-    messageHeader_.clear();
-    messageHeader_.resize(0);
-    spaceSearchPos_ = 0;
+    size_t contentSize = headerData_.size();
+
+    std::vector<std::string> splitContent;
+    splitContent.reserve(contentSize);
+
+    unsigned int startPos, endPos, length;
+
+    // Go through the content picking each string out
+    // based on its starting and ending position
+    for (unsigned int i = 0; i < contentSize; i++) {
+        startPos = (i == 0 ? 0 : headerData_[i - 1]);
+        endPos = headerData_[i];
+        length = endPos - startPos;
+
+        splitContent.push_back(content.substr(startPos, length));
+    }
+
+    return splitContent;
 }
 
-void ListStreamSocket::abortWithResult(ListStreamSocket::Result result)
+void ListStreamSocket::removeMessage()
 {
-    if (callback_)
-        callback_(result, vector<string>());
-    resetData(static_cast<unsigned int>(messageBuffer_.size()));
+    messageBuffer_.erase(0, messageLength_);
+    headerData_.clear();
 }
 
+void ListStreamSocket::resetData()
+{
+    messageBuffer_.clear();
+    headerData_.clear();
+}
+
+void ListStreamSocket::abort(ListStreamSocket::Result result)
+{
+    resetData();
+    callback_(this, result, std::vector<std::string>());
 }
