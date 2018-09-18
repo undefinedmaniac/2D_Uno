@@ -2,10 +2,11 @@
 #include "game/game.h"
 #include "game/interfaces/igameobserver.h"
 #include "observer.h"
+#include "network/liststreamsocket.h"
 
 int main()
 {
-    Observer observer;
+    /*Observer observer;
 
     game::Game game(0, &observer);
 
@@ -16,7 +17,11 @@ int main()
     game.start();
 
     game.removePlayer(player2);
-    game.removePlayer(player3);
+    game.removePlayer(player3);*/
+
+    std::vector<std::string> list = {"Hi", "There", "Tanner"};
+
+    std::cout << formatList(list) << std::endl;
 
     return 0;
 }

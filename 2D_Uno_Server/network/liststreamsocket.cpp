@@ -211,3 +211,36 @@ void ListStreamSocket::abort(ListStreamSocket::Result result)
     resetData();
     callback_(this, result, std::vector<std::string>());
 }
+
+std::string formatList(const std::vector<std::string> &list)
+{
+    std::string content;
+    std::vector<size_t> headerData;
+    headerData.reserve(list.size());
+
+    for (const std::string &term : list) {
+        content += term;
+        headerData.push_back(content.size());
+    }
+
+    std::string header;
+    const size_t count = headerData.size() - 1;
+    for (size_t i = 0; i <= count; i++) {
+        header += std::to_string(headerData.at(i));
+
+        if (i != count)
+            header += '.';
+    }
+
+    return  header + ' ' + content;
+}
+
+void sendList(ListStreamSocket *socket, std::vector<std::string> list)
+{
+
+}
+
+void sendList(std::vector<ListStreamSocket *> sockets, std::vector<std::string> list)
+{
+
+}

@@ -120,4 +120,10 @@ private:
     void abort(Result result);
 };
 
+std::string formatList(const std::vector<std::string> &list);
+
+void sendList(ListStreamSocket *socket, const std::vector<std::string> &list);
+
+void sendList(std::vector<ListStreamSocket*> sockets, const std::vector<std::string> &list);
+
 #endif // LISTSTREAMSOCKET_H

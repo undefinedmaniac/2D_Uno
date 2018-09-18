@@ -1,0 +1,14 @@
+1. Accept connection - Acceptor
+2. Perform handshake - HandshakeHandler
+3. Join/Create lobby - LobbyHandler
+4. start the game - GameHandler
+
+Pipeline - A list of handlers that 
+
+AbstractHandler - Defines an abstract handler
+
+Acceptor - Bind to port and accept connections on IP V4 or V6
+HandshakeHandler - Complete the handshake steps
+LobbyHandler - Join or Create a lobby for the client
+GameHandler - Allow the client to participate in a game
+
